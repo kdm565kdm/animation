@@ -35,7 +35,7 @@ def animation(request):
             trans_to_video=Translate(frame,len(images),images_path,videos_path)
             trans_to_video.become_video()
             images.clear()
-            #return_json = {'test':'后台打包合成成功！！'}
+            return_json = {'test':'后台打包合成成功！！'}
             return HttpResponse(json.dumps(return_json), content_type='application/json')
         return_json = {'test':'11111'}
         return HttpResponse(json.dumps(return_json), content_type='application/json')

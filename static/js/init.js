@@ -1,14 +1,21 @@
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
+
 var video = document.getElementById('video');
 var appear_video=document.getElementById('appear_video');
+
 var play_btn=document.getElementById("play");
 var continue_btn=document.getElementById("continue");
-//var range_num=document.getElementById("range_num");
+
+var range_num=document.getElementById("set_frame");
+var modal_set_frame=document.getElementById("modal_set_frame");
 var input_num=document.getElementById("input_num");
+var cancel_range_num_btn=document.getElementById("cancel_range_num_btn");
 var photo=document.getElementById("photo");
+
 var image_div=document.getElementById("image");
 var queue=document.getElementById("queue");
+
 var photos=[];
 var second=1000;
 var speed=41;//1000/24~41一秒二十四帧
@@ -41,6 +48,16 @@ document.onkeyup = function (e) {//按键信息对象以函数参数的形式传
 photo.addEventListener("click", function() {
 	catch_image();
 });
+input_num.oninput=function(){
+	document.getElementById('fps').innerHTML=input_num.value;
+};
+range_num.onclick=function(){
+	modal_set_frame.style.display='block';
+};
+cancel_range_num_btn.onclick=function(){
+	modal_set_frame.style.display='none';
+};
+
 cancel_btn.onclick=function(){
 	modal.style.display='none';
 };
@@ -138,8 +155,10 @@ function catch_image(){
 		frame_img.setAttribute('src',this.getAttribute('src'));
 		frame.appendChild(frame_img);
 		modal.style.display='block';
-
+		
 		del_btn.setAttribute('del-src',this.id);
+
+		image_div.setAttribute('src',this.getAttribute('src'));
 	}
 
 	queue.appendChild(img);
