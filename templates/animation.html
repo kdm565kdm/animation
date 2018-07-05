@@ -18,7 +18,7 @@
 		<button id="photo" class='btn'><i class="icon-user-camera"></i>拍摄</button>
 		<button id="continue" class='btn'><i class="icon-user-add"></i>继续</button>
 		<button id="set_frame" class='btn'>设置帧率</button>
-		<!-- <input id="input_num" type="number" min="1" max="30" value="8"> -->
+		<button id="relay_photo" class='btn'>延迟摄影</button>
 		<button id="play" class='btn'><i class="icon-user-play"></i>播放</button>
 		<button id="tanslate" class='btn'>合成</button>
 	</div>
@@ -43,6 +43,7 @@
 <div id="queue">
 
 </div>
+<!--frame div-->
 <div id="modal" class="modal">
 	<div class="modal-content">
 
@@ -57,7 +58,7 @@
 		</footer>
 	</div>
 </div>
-
+<!--set_frame div-->
 <div id="modal_set_frame" class="modal">
 	<div class="modal-content">
 
@@ -70,6 +71,23 @@
 		<footer class="modal-footer">
 
 			<button id="cancel_range_num_btn">确定</button>
+			
+		</footer>
+	</div>
+</div>
+
+<!--relay photo setting div-->
+<div id="relay" class="modal">
+	<div class="modal-content">
+
+		<div class="modal-body">
+			设置倒计时：<input type="number" id="Countdown" value='120' min='10'/>秒
+			<br>
+			间隔时间：<input type="number" id="intetval" value='2' min='0.1'/>秒
+		</div>
+		<footer class="modal-footer">
+
+			<button id="relay_btn">开始</button>
 			
 		</footer>
 	</div>
