@@ -4,14 +4,14 @@ var video = document.getElementById('video');
 var appear_video=document.getElementById('appear_video');
 var play_btn=document.getElementById("play");
 var continue_btn=document.getElementById("continue");
-//var change_speed=document.getElementById("change_speed");
-
+//var range_num=document.getElementById("range_num");
+var input_num=document.getElementById("input_num");
 var photo=document.getElementById("photo");
 var image_div=document.getElementById("image");
 var queue=document.getElementById("queue");
 var photos=[];
-
-var speed=500;
+var second=1000;
+var speed=41;//1000/24~41一秒二十四帧
 
 var translate=document.getElementById("tanslate");
 
@@ -66,42 +66,61 @@ del_btn.onclick=function(){
 };
 
 play_btn.onclick=function(){
-	//video.style.display='none';
 	appear_video.style.display='none';
 	image_div.style.display='block';
+	var frame=parseInt(input_num.value);
+	speed=parseInt(1000/frame)
 	play();
 };
 
 continue_btn.onclick=function(){
 	image_div.style.display='none';
-	//video.style.display='block';
 	appear_video.style.display='block';
 };
 
-// change_speed.onchange=function(){
-// 	var time=change_speed.value;
-// 	speed=parseInt(time);
 
-// };
 $(document).ready(function(){
 	translate.onclick=function(){
-
-		var updatas=[];
+		var frame=parseInt(input_num.value);
+		//var updatas=[];
+		var frame={
+			'frame_per_second':frame
+		}
 		for(var i=0, len=photos.length; i<len; i++){
-			updatas.push(photos[i].getAttribute('src'));
+			var tem_img=photos[i].getAttribute('src');
+			var post_data = {
+			    'image':tem_img   
+			};
+		    $.ajax({
+		        url:'/animation/',
+		        type:'POST',
+		        data:post_data, 
+		        async:true,    //或false,是否异步
+		        dataType:'json',    //返回的数据格式：json/xml/html/script/jsonp/text
+		        success:function(data){
+		       		//console.log(data);
+
+
+		        },
+		        error:function(){
+		            console.log("error");
+		        }
+
+		    });
+			//updatas.push(photos[i].getAttribute('src'));
 
 		}
 		var post_data = {
-		    'images':updatas,
+		    'frame_per_second':frame
 		};
 	    $.ajax({
 	        url:'/animation/',
 	        type:'POST',
-	        data:post_data, 
+	        data:frame, 
 	        async:true,    //或false,是否异步
 	        dataType:'json',    //返回的数据格式：json/xml/html/script/jsonp/text
 	        success:function(data){
-	       		console.log(data);
+	       		alert(data['test']);
 
 
 	        },
@@ -113,19 +132,7 @@ $(document).ready(function(){
 
 	};
 });
-// translate.onclick=function(){
-// 	var updatas={'images':2};
-// 	//var updatas=[];
-// 	// for(var i=0, len=photos.length; i<len; i++){
-// 	// 	updatas.push(photos[i].getAttribute('src'));
-// 	// }
-// 	updatas=JSON.stringify({'data':updatas});
 
-// 	Ajax.post('/animation/',updatas,function(data){
-// 		console.log(data);
-// 	});
-// };
-//播放定格动画函数
 function play(speed){
 	
 	var time=time;
@@ -165,32 +172,3 @@ function del_ele_in_array(arr,ele){
 }
 
 
-
-// var Ajax={
-//   get: function(url, fn) {
-//     // XMLHttpRequest对象用于在后台与服务器交换数据   
-//     var xhr = new XMLHttpRequest();            
-//     xhr.open('GET', url, true);
-//     xhr.onreadystatechange = function() {
-//       // readyState == 4说明请求已完成
-//       if (xhr.readyState == 4 && xhr.status == 200 || xhr.status == 304) { 
-//         // 从服务器获得数据 
-//         fn.call(this, xhr.responseText);  
-//       }
-//     };
-//     xhr.send();
-//   },
-//   // datat应为'a=a1&b=b1'这种字符串格式，在jq里如果data为对象会自动将对象转成这种字符串格式
-//   post: function (url, data, fn) {
-//     var xhr = new XMLHttpRequest();
-//     xhr.open("POST", url, true);
-//     // 添加http头，发送信息至服务器时内容编码类型
-//     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");  
-//     xhr.onreadystatechange = function() {
-//       if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status == 304)) {
-//         fn.call(this, xhr.responseText);
-//       }
-//     };
-//     xhr.send(data);
-//   }
-// }

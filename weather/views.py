@@ -9,8 +9,8 @@ from init_images_videos_finder import FilesFinders
 import os
 
 
-photos=[]
 
+images=[]
 #初始化图片帧与定格动画视频文件夹
 finders=FilesFinders()
 finders.init_finders()
@@ -20,14 +20,24 @@ videos_path=finders.get_videos_finder()
 
 
 def animation(request):
+    
     if request.method == "POST":
         #获得定格动画的每一帧图片
-        images=request.POST.getlist("images[]")
+        image=request.POST.get("image",None)
+        if(image!=None):
+            images.append(image)
         
-        parse_image=parseImageCode(images,images_path)
-        parse_image.parse_base64()
-        trans_to_video=Translate(1,len(images),images_path,videos_path)
-        trans_to_video.become_vodeo()
+        else:
+            frame=request.POST.get('frame_per_second',None)
+            frame=int(frame)
+            parse_image=parseImageCode(images,images_path)
+            parse_image.parse_base64()
+            trans_to_video=Translate(frame,len(images),images_path,videos_path)
+            trans_to_video.become_video()
+            images.clear()
+            return_json = {'test':'后台打包合成成功！！'}
+            print(images)
+            return HttpResponse(json.dumps(return_json), content_type='application/json')
         return_json = {'test':'11111'}
         return HttpResponse(json.dumps(return_json), content_type='application/json')
     return render(request,'animation.html')
