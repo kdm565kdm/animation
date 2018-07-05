@@ -30,27 +30,16 @@ if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         //video.play();
     });
 }
+document.onkeyup = function (e) {//按键信息对象以函数参数的形式传递进来了，就是那个e
+    var code = e.charCode || e.keyCode;  //取出按键信息中的按键代码(大部分浏览器通过keyCode属性获取按键代码，但少部分浏览器使用的却是charCode)
+    if (code == 13) {
+        //此处编写用户敲回车后的代码
+        catch_image();
+    }
+}
 
 photo.addEventListener("click", function() {
-    context.drawImage(video, 0, 0, 1280,720);
-    var dataURL=canvas.toDataURL('image/jpeg'); //转换图片为dataURL
- 	var img = document.createElement("img");
-	img.setAttribute("src",dataURL);
-	var id=Math.random();
-	img.setAttribute("id",id);
-	img.onclick=function(){
-		var frame=document.getElementById("frame");
-		frame.innerHTML='';
-		var frame_img=document.createElement("img");
-		frame_img.setAttribute('src',this.getAttribute('src'));
-		frame.appendChild(frame_img);
-		modal.style.display='block';
-
-		del_btn.setAttribute('del-src',this.id);
-	}
-
-	queue.appendChild(img);
-	photos.push(img);
+	catch_image();
 });
 cancel_btn.onclick=function(){
 	modal.style.display='none';
@@ -61,13 +50,14 @@ del_btn.onclick=function(){
 	queue.removeChild(del_frame);
 	var str=del_frame;
 	photos=del_ele_in_array(photos,str);
-	console.log(photos);
 	modal.style.display='none';
 };
 
 play_btn.onclick=function(){
 	appear_video.style.display='none';
 	image_div.style.display='block';
+	photo.style.display='none';
+	continue_btn.style.display='block';
 	var frame=parseInt(input_num.value);
 	speed=parseInt(1000/frame)
 	play();
@@ -76,6 +66,8 @@ play_btn.onclick=function(){
 continue_btn.onclick=function(){
 	image_div.style.display='none';
 	appear_video.style.display='block';
+	photo.style.display='block';
+	continue_btn.style.display='none';
 };
 
 
@@ -107,7 +99,6 @@ $(document).ready(function(){
 		        }
 
 		    });
-			//updatas.push(photos[i].getAttribute('src'));
 
 		}
 		var post_data = {
@@ -120,8 +111,8 @@ $(document).ready(function(){
 	        async:true,    //或false,是否异步
 	        dataType:'json',    //返回的数据格式：json/xml/html/script/jsonp/text
 	        success:function(data){
-	       		alert(data['test']);
-
+	       		
+	       		window.location.href='http://127.0.0.1:8000/upload/';
 
 	        },
 	        error:function(){
@@ -132,6 +123,28 @@ $(document).ready(function(){
 
 	};
 });
+
+function catch_image(){
+    context.drawImage(video, 0, 0, 1280,720);
+    var dataURL=canvas.toDataURL('image/jpeg'); //转换图片为dataURL
+ 	var img = document.createElement("img");
+	img.setAttribute("src",dataURL);
+	var id=Math.random();
+	img.setAttribute("id",id);
+	img.onclick=function(){
+		var frame=document.getElementById("frame");
+		frame.innerHTML='';
+		var frame_img=document.createElement("img");
+		frame_img.setAttribute('src',this.getAttribute('src'));
+		frame.appendChild(frame_img);
+		modal.style.display='block';
+
+		del_btn.setAttribute('del-src',this.id);
+	}
+
+	queue.appendChild(img);
+	photos.push(img);
+}
 
 function play(speed){
 	

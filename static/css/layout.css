@@ -1,5 +1,4 @@
-
-	body{
+body{
 	background-color:#CCC;
 }
 #container{
@@ -36,6 +35,8 @@
 
 #inner *{margin-left:2%;}
 
+
+
 #left-side{
 	position: fixed;
 	width: 35%;
@@ -55,14 +56,12 @@
 }
 #appear_video{
 	width: 60%;
-
-
 }
 #canvas{
 	display: none;
-
-
-
+}
+#continue{
+	display: none;
 }
 .btn{
 	background: #bbb;
@@ -125,14 +124,17 @@
 
 	height: 50px; /*图片显示的高*/
 }
-.speed{
+/*.speed{
 	width: 50%;
 	margin-top: 10px;
 	float: left;
 }
 .speed p{
 	display: inline;
-}
+}*/
+
+
+
 /*帧队列*/
 #queue{
 	width: 93%;

@@ -18,4 +18,5 @@ from django.urls import path
 from weather import views
 urlpatterns = [
     path('animation/', views.animation),
+    path('upload/', views.upload),
 ]
