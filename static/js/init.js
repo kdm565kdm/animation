@@ -1,7 +1,7 @@
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
 var video = document.getElementById('video');
-
+var appear_video=document.getElementById('appear_video');
 var play_btn=document.getElementById("play");
 var continue_btn=document.getElementById("continue");
 //var change_speed=document.getElementById("change_speed");
@@ -26,12 +26,13 @@ if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
 
     navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
         video.src = window.URL.createObjectURL(stream);
+        appear_video.src = window.URL.createObjectURL(stream);
         //video.play();
     });
 }
 
 photo.addEventListener("click", function() {
-    context.drawImage(video, 0, 0, 300,150);
+    context.drawImage(video, 0, 0, 1280,720);
     var dataURL=canvas.toDataURL('image/jpeg'); //转换图片为dataURL
  	var img = document.createElement("img");
 	img.setAttribute("src",dataURL);
@@ -65,14 +66,16 @@ del_btn.onclick=function(){
 };
 
 play_btn.onclick=function(){
-	video.style.display='none';
+	//video.style.display='none';
+	appear_video.style.display='none';
 	image_div.style.display='block';
 	play();
 };
 
 continue_btn.onclick=function(){
 	image_div.style.display='none';
-	video.style.display='block';
+	//video.style.display='block';
+	appear_video.style.display='block';
 };
 
 // change_speed.onchange=function(){

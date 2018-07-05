@@ -50,13 +50,17 @@
 	display: none;
 }
 #video{
-	width: 350px;
+	/*width: 350px;*/
+	display: none;
+}
+#appear_video{
+	width: 60%;
+
 
 }
 #canvas{
 	display: none;
-	width: 350px;
-	height: 350px;
+
 
 
 }
