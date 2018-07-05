@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+	<title>weather</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link href="/static/css/bootstrap.min.css" rel="stylesheet">
+	<script src="/static/js/jquery-3.1.0.min.js"></script>
+	<script src="/static/js/bootstrap.min.js"></script>
+	<link rel="stylesheet" href="/static/css/style.css">
+    <script src="/static/js/echarts.js"></script>
+</head>
+<body class="sun">
+	<div id="wrapper">
+        <div class="overlay"></div>
+    
+        <!-- Sidebar -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" id="sidebar-wrapper" role="navigation">
+                       <p id="siderbar_title">输入城市名查询天气信息<p>
+
+                	<div class="input-group">
+                		<input type="text"  class="form-control" name="city" maxlength="10" id="city">
+                		<span class="input-group-btn">
+                        <button class="btn btn-primary" type="button" id="sub">查询</button>
+                    	</span>
+                	</div>
+                    <br>
+                    <button type="button" class="btn btn-primary btn-block" id="moive">豆瓣电影 Top</button>
+                    <br>
+                    <button type="button" class="btn btn-primary btn-block" id="b_pic">美图</button>
+                    <br>
+                    <a href="../static/web_version1/indexMe.html"><button type="button" class="btn btn-primary btn-block" id="b_me">展示用个人网站</button></a>
+        </nav>
+        <!-- /#sidebar-wrapper -->
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+          <button type="button"  id="menu"  class="hamburger is-closed animated fadeInLeft" data-toggle="offcanvas">
+            <span class="hamb-top"></span>
+            <span class="hamb-middle"></span>
+            <span class="hamb-bottom"></span>
+          </button>
+          <div class = "waterfall_outer" id="beauty">
+            <div class="waterfall" id="beauty_pics">
+            </div>
+            
+          </div>
+          <div class = ".waterfall_outer" id="movie_top">
+            <div class="waterfall_douban" id="douban_content">
+            </div>
+          </div>
+            <div class="container" id="weather_app">
+
+                <div class="row">
+                    <div class="col-lg-8 col-lg-offset-2">
+                        <h1 id="city_name">{{ city }}</h1>
+                        <h3 id="climate">{{data.0.2}}</h3>
+                        <h4 id="temperature">{{ data.0.3 }}</h4>
+                        <h6 id="wind">
+                            <span id="wind_direction">{{ data.0.4 }}</span>
+                            <span id="wind_degree">{{ data.0.5 }}</span>
+                        </h6>
+                    </div>
+                    <table class="table" id="days">
+                      
+                    </table>
+
+
+                    <div id="a" class="col-lg-12">
+                         <div id="canvas"></div>
+                         <p>
+                            <br>
+                            <br>
+                            <br>
+                            <br>
+                            <br>
+
+
+
+                        </p>
+                     </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /#page-content-wrapper -->
+
+    </div>
+    <!-- /#wrapper -->
+    <div id="top">
+        <button type="button" class="btn btn-default">
+            <span class="glyphicon glyphicon-arrow-up"></span>
+        </button>
+    </div>
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                            
+                        <div class="modal-body" id="modal">
+                            
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭
+                            </button>
+
+                        </div>
+                    </div>
+                    <!-- /.modal-content -->
+                </div>
+	<div id="bottom"> 
+        <hr>
+        <div>
+        <span>中央气象台</span><span>7:35发布</span>
+        </div>
+    </div>
+	<script src="/static/js/effects.js"></script>
+
+</body>
+</html>
