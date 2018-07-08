@@ -20,6 +20,7 @@ var cancel_range_num_btn=document.getElementById("cancel_range_num_btn");
 var photo=document.getElementById("photo");
 
 var image_div=document.getElementById("image");
+//var now=document.getElementById("now");
 var queue=document.getElementById("queue");
 
 var photos=[];
@@ -116,54 +117,6 @@ continue_btn.onclick=function(){
 $(document).ready(function(){
 	translate.onclick=function(){
 		upload_to_server_to_merge();
-		// var frame=parseInt(input_num.value);
-		// //var updatas=[];
-		// var frame={
-		// 	'frame_per_second':frame
-		// }
-		// for(var i=0, len=photos.length; i<len; i++){
-		// 	var tem_img=photos[i].getAttribute('src');
-		// 	var post_data = {
-		// 	    'image':tem_img   
-		// 	};
-		//     $.ajax({
-		//         url:'/animation/',
-		//         type:'POST',
-		//         data:post_data, 
-		//         async:true,    //或false,是否异步
-		//         dataType:'json',    //返回的数据格式：json/xml/html/script/jsonp/text
-		//         success:function(data){
-		//        		//console.log(data);
-
-
-		//         },
-		//         error:function(){
-		//             console.log("error");
-		//         }
-
-		//     });
-
-		// }
-		// var post_data = {
-		//     'frame_per_second':frame
-		// };
-	 //    $.ajax({
-	 //        url:'/animation/',
-	 //        type:'POST',
-	 //        data:frame, 
-	 //        async:true,    //或false,是否异步
-	 //        dataType:'json',    //返回的数据格式：json/xml/html/script/jsonp/text
-	 //        success:function(data){
-	       		
-	 //       		window.location.href='http://127.0.0.1:8000/upload/';
-
-	 //        },
-	 //        error:function(){
-	 //            console.log("error");
-	 //        }
-
-	 //    });
-
 	};
 });
 
@@ -207,10 +160,15 @@ function cicle_show_image(i,len){
 		return;
 	}
 	var img=photos[i];
-
+	// var j=i-1;
+	// if(j<0){
+	// 	j=0;
+	// }
+	// var pre_img=photos[j];
        
-       //在页面上显示文件
-	   image_div.setAttribute("src",img.getAttribute('src'));
+    //在页面上显示文件
+    //now.style.background="url("+img.getAttribute('src')+")";
+	image_div.setAttribute("src",img.getAttribute('src'));
 
     i++;
     setTimeout('cicle_show_image('+i+','+len+')',speed);

@@ -9,7 +9,9 @@ body{
 }
 
 
-
+.item{
+	width: 80%;
+}
 
 .waterfall{
         -moz-column-count:1; /* Firefox */
@@ -23,7 +25,7 @@ body{
     }
 
     .item img{
-        width: 80%;
+        width: 100%;
         margin-bottom:10px;
         border: 2px solid #333;
         border-radius: 20px 20px;
@@ -46,9 +48,17 @@ body{
 /*#camera{
 	display: none;
 }*/
+/*#now{
+	background-repeat: no-repeat;
+	margin-bottom:10px;
+    border-radius: 20px 20px;
+    box-shadow: 3px 3px 10px #444;
+}*/
 #image{
 	display: none;
+
 }
+
 #video{
 	/*width: 350px;*/
 	display: none;
