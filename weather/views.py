@@ -32,9 +32,9 @@ def animation(request):
             frame=int(frame)
             parse_image=parseImageCode(images,images_path)
             parse_image.parse_base64()
-            trans_to_video=Translate(frame,len(images),images_path,videos_path)
-            trans_to_video.become_video()
-            images.clear()
+            #trans_to_video=Translate(frame,len(images),images_path,videos_path)
+            #trans_to_video.become_video()
+            #images.clear()
             return_json = {'test':'后台打包合成成功！！'}
             return HttpResponse(json.dumps(return_json), content_type='application/json')
         return_json = {'test':'11111'}
@@ -43,3 +43,7 @@ def animation(request):
 
 def upload(request):
     return render(request,'upload.html')
+
+
+def test(request):
+    return render(request,'test.html')

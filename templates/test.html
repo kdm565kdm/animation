@@ -1,0 +1,302 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>抠图demo</title>
+    <style type="text/css">
+		#input-img {
+		    max-width: 400px;
+		}
+
+		#input-upload {
+		    width: 200px;
+		}
+		/* 图片背景纹理 */
+/*		.img-container {
+		    font-size: 0;
+		    background-image: url('bg.jpg');
+		    background-size: 65%;
+		    background-repeat: no-repeat;
+		}*/
+		.img-container {
+		    font-size: 0;
+		    background-image: -webkit-gradient(linear, 0 0, 100% 100%, color-stop(.25, #ccc), color-stop(.25, transparent), to(transparent)),-webkit-gradient(linear, 0 100%, 100% 0, color-stop(.25, #ccc), color-stop(.25, transparent), to(transparent)),-webkit-gradient(linear, 0 0, 100% 100%, color-stop(.75, transparent), color-stop(.75, #ccc)),-webkit-gradient(linear, 0 100%, 100% 0, color-stop(.75, transparent), color-stop(.75, #ccc));
+		    background-size: 10px 10px;
+		}
+		.img-container canvas{
+			width: 100%;
+		}
+		.err {
+		    border: 1px solid red;
+		}
+		#origin{
+			position: absolute;
+			left: 0px;
+			top: 40px;
+		}
+		#after{
+			position: absolute;
+			left: 400px;
+			top: 40px;
+		}
+
+		#fin{
+			position: absolute;
+			top: 700px;
+		}
+
+    </style>
+    <script src="/static/js/jspdf.min.js"></script>
+</head>
+<body>
+    <!-- 用于输入本地文件和远程URL -->
+    <input type="file" id="input-upload" accept=".jpg,.jpeg,.png,.gif,.svg" placeholder="上传本地图片" />
+<!--     <input type="text" id="input-url" placeholder="输入图片URL"></input> -->
+    <button id="merge">合成</button>
+    <!-- 图片处理前后展示 -->
+    <a href="void(0);" id="download">点我下载</a>
+    <div class="outer">
+    	<div id="origin">
+	    	<p>原图：</p>
+		    <div class="img-container"><img id="input-img"></div>
+    	</div>
+    	<div id="after">
+		    <p>扣过后：</p>
+		    <div class="img-container" id="outer-canvas">
+		        <canvas id="my-canvas" width="800" height="450"></canvas>
+		    </div>
+    	</div>
+    </div>
+	<div id="fin">
+	    <p>输出</p>
+	    <div class="img-container" id="out">
+	        <canvas id="a4_out" width="2480" height="3508"></canvas>
+	    </div>
+	</div>
+    
+
+<script type="text/javascript">
+	const oUpload = document.getElementById('input-upload');
+
+	// 除此之外还需要一个img标签来加载数据和进行展示
+	var oImg = document.getElementById('input-img');
+
+	// 一个A标签，让用户点击用的
+	const oDownload = document.getElementById('download');
+	const merge=document.getElementById('merge');
+
+	 // canvas实例
+	const oCanvas = document.getElementById('my-canvas');
+	const output = document.getElementById('a4_out');
+	var results=[];
+	var frames=['/static/1.jpg','/static/2.jpg','/static/3.jpg','/static/4.jpg','/static/5.jpg','/static/6.jpg','/static/7.jpg','/static/8.jpg','/static/9.jpg','/static/10.jpg','/static/11.jpg','/static/12.jpg','/static/13.jpg','/static/14.jpg','/static/15.jpg','/static/16.jpg','/static/17.jpg','/static/18.jpg','/static/19.jpg','/static/20.jpg'];
+	//var frames=[];
+	const ctx = oCanvas.getContext("2d");
+	const octx=output.getContext("2d");
+	//方向默认竖直，尺寸ponits，格式a4[595.28,841.89]
+	var pdf = new jsPDF('', 'pt', 'a4');
+	oUpload.onchange = loadFile;
+	// oInput.onchange = loadUrl;
+
+	merge.onclick=function(){
+		var j=10;
+		mregeBackground(j,frames.length);
+
+
+	};
+	//从画布上读取数据并保存到本地
+	function setDownLoad(fileName) {
+	    const url  = oCanvas.toDataURL();
+	    oDownload.setAttribute('href', url);
+	    oDownload.setAttribute('target', '_blank');
+
+	    if (fileName) {
+	        oDownload.setAttribute('download', fileName);
+	    }
+	}
+
+
+
+	// 读取本地文件
+	function loadFile(e) {
+	    const file = e.target.files[0];
+	    const reader = new FileReader();
+	    reader.onload = onFileLoad;
+	    reader.readAsDataURL(file);
+	}
+
+
+
+	// 加载图片数据
+	function onFileLoad(src) {
+	    oImg.onload = function() {
+	        onImageLoad(oImg)// 这里使用图像数据，后续讲解
+	    };
+	    oImg.onerror = onImageErr;
+	    oImg.src = (src.target ? src.target.result : src);
+	}
+
+	// 上面读取资源的操作后，将图像画到canvas上
+	function onImageLoad(img) {
+	    const width = oCanvas.width = img.naturalWidth || img.width;
+	    const height = oCanvas.height = img.naturalHeight || img.height;
+
+	    
+	    ctx.drawImage(img, 0, 0);
+
+	    // 获取画布像素信息
+	    const imageData = ctx.getImageData(0, 0, width, height);
+
+	    // 一个像素点由RGBA四个值组成，data为[R,G,B,A [,R,G,B,A[...]]]组成的一维数组
+	    // 可以通过修改该数组的数据，达到修改图片内容的目的
+	    const data = imageData.data;
+	    filter(data);// 这里对图像数据进行处理
+
+	    // 把新的内容画进画布里
+	    ctx.putImageData(imageData, 0, 0);
+	    
+	    var bg = new Image;
+	    bg.src='/static/bg.jpg';
+
+		bg.addEventListener('load', function(event) {
+			ctx.globalCompositeOperation="destination-over";
+	    	ctx.drawImage(bg, 0, 0,width,height);
+			var dataURL=oCanvas.toDataURL('image/jpeg'); //转换图片为dataURL
+
+
+
+			frames.push(dataURL);
+		});
+
+
+
+	}
+
+	//抠图算法
+	function filter(data) {
+		
+	    for (let i = 0; i < data.length; i += 4) {
+	        let r = data[i],
+	            g = data[i + 1],
+	            b = data[i + 2];
+	        //g通道的值与r,b通道的值各相差大于20时
+	        var difference_g_r=g-r;
+	        var difference_g_b=g-b;
+	        if(difference_g_b>10&&difference_g_r>10){
+	        	var average=(r+g+b)/3;
+	        	if (g<=20) {
+	        		data[i]=data[i + 1]=data[i + 2]=0;
+	        		
+	        		data[i + 3]=150;
+	        	}
+	        	else if(g<=30){
+	        		data[i]=data[i + 1]=data[i + 2]=average;
+	        		
+	        		data[i + 3]=150;
+	        	}
+	        	else if(g<=60){
+	        		data[i]=data[i + 1]=data[i + 2]=average;
+	        		
+	        		data[i + 3]=150;
+	        	}else{
+	        		data[i + 3] = 0;
+	        	}
+	        	
+	        }
+ 
+	    }
+	}
+	function onImageErr() {
+	    oInput.classList.add('err');
+	}
+
+	function mregeBackground(i,len){
+		var len=len;
+		var i=i;
+		var j=i-10;
+
+		if(i>len){
+
+			return;
+		}
+		
+		var bg=new Image;
+		bg.src='/static/background/'+i+'.jpg';
+		bg.onload=function(){
+			octx.globalCompositeOperation="source-over";
+	    	octx.drawImage(bg,0,0,2480,3508);
+			mergeImages(j,j+10,375,150);
+			// i+=10;
+			
+			//mregeBackground(i,len);
+		};
+
+	}
+	function mergeImages(i,j,x,y){
+
+		if(frames[i]===undefined){
+			var pageData=output.toDataURL('image/jpeg'); //转换图片为dataURL
+			results.push(pageData);
+			
+			console.log('print pdf document');
+
+			//addImage后两个参数控制添加图片的尺寸，此处将页面高度按照a4纸宽高比列进行压缩
+			pdf.addImage(pageData, 'JPEG', 0, 0, 595.28, 592.28/output.width * output.height );
+			pdf.save('stone.pdf');
+			octx.clearRect(0,0,2480,3508);
+			return;
+		}
+		if(i>j){
+			i=i-1+10;
+			console.log(i);
+			var pageData=output.toDataURL('image/jpeg'); //转换图片为dataURL
+			//addImage后两个参数控制添加图片的尺寸，此处将页面高度按照a4纸宽高比列进行压缩
+			pdf.addImage(pageData, 'JPEG', 0, 0, 595.28, 592.28/output.width * output.height);
+			pdf.addPage();
+			results.push(pageData);
+			octx.clearRect(0,0,2480,3508);
+			console.log('add a page of A4 paper');
+			mregeBackground(i,frames.length);
+			return;
+		}
+
+		const width=800;
+		const height=450;
+	    var bg = new Image;
+	    bg.src=frames[i];
+		bg.addEventListener('load', function(event) {
+			octx.drawImage(bg,x,y,width,height);
+			// if(x!=375){
+			// 	x=375;
+			// 	y+=673;
+			// }else{
+			// 	x+=1100;
+			// }
+
+			if(y>=2842){
+				y=150;
+				x+=1100;
+			}else{
+				y+=673;
+			}
+
+			i+=1;
+
+			mergeImages(i,j,x,y);
+		});
+
+
+	}
+function convertBase64UrlToBlob(urlData) {
+   const bytes = window.atob(urlData.split(',')[1]);        // 去掉url的头，并转换为byte
+   // 处理异常,将ascii码小于0的转换为大于0
+   const ab = new ArrayBuffer(bytes.length);
+   const ia = new Uint8Array(ab);
+   for (let i = 0; i < bytes.length; i++) {
+       ia[i] = bytes.charCodeAt(i);
+   }
+   return new Blob([ab], { type: 'image/jpeg' });
+}
+
+</script>
+</body>
+</html>

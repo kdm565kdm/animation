@@ -19,4 +19,5 @@ from weather import views
 urlpatterns = [
     path('animation/', views.animation),
     path('upload/', views.upload),
+    path('test/', views.test),
 ]
