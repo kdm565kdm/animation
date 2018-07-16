@@ -24,17 +24,28 @@ var image_div=document.getElementById("image");
 var queue=document.getElementById("queue");
 
 var photos=[];
+var frames=[];
+var results=[];
+
 var second=1000;
 var speed=41;//1000/24~41一秒二十四帧
 
 var translate=document.getElementById("tanslate");
 
+// 抠图与打包pdf用的canvas
+const oCanvas = document.getElementById('my-canvas');
+const output = document.getElementById('a4_out');
 
+// 抠图与打包pdf用的canvas实例
+const ctx = oCanvas.getContext("2d");
+const octx=output.getContext("2d");
 
 //删除帧的弹出框按钮
 var del_btn=document.getElementById('del');
 var cancel_btn=document.getElementById('cancel');
 var modal = document.getElementById('modal');
+
+var pdf = new jsPDF('', 'pt', 'a4');
 //连接摄像头
 if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
 
@@ -92,8 +103,7 @@ relay_btn.onclick=function(){
 	intetval_time=parseInt(intetval_time*1000);
 
 	relay_camera(count_time,intetval_time);
-	// console.log(count_time);
-	// console.log(intetval_time);
+
 };
 
 play_btn.onclick=function(){
@@ -113,12 +123,17 @@ continue_btn.onclick=function(){
 	continue_btn.style.display='none';
 };
 
+translate.onclick=function(){
+	var i=0;
+	onImageLoad(i);
 
-$(document).ready(function(){
-	translate.onclick=function(){
-		upload_to_server_to_merge();
-	};
-});
+
+};
+// $(document).ready(function(){
+// 	translate.onclick=function(){
+// 		upload_to_server_to_merge();
+// 	};
+// });
 
 function catch_image(){
     context.drawImage(video, 0, 0, 1280,720);
@@ -160,14 +175,7 @@ function cicle_show_image(i,len){
 		return;
 	}
 	var img=photos[i];
-	// var j=i-1;
-	// if(j<0){
-	// 	j=0;
-	// }
-	// var pre_img=photos[j];
-       
-    //在页面上显示文件
-    //now.style.background="url("+img.getAttribute('src')+")";
+
 	image_div.setAttribute("src",img.getAttribute('src'));
 
     i++;
@@ -201,52 +209,241 @@ function relay_camera(count_time,intetval_time){
 
 }
 
-function upload_to_server_to_merge(){
-		var frame=parseInt(input_num.value);
-		//var updatas=[];
-		var frame={
-			'frame_per_second':frame
-		}
-		for(var i=0, len=photos.length; i<len; i++){
-			var tem_img=photos[i].getAttribute('src');
-			var post_data = {
-			    'image':tem_img   
-			};
-		    $.ajax({
-		        url:'/animation/',
-		        type:'POST',
-		        data:post_data, 
-		        async:true,    //或false,是否异步
-		        dataType:'json',    //返回的数据格式：json/xml/html/script/jsonp/text
-		        success:function(data){
-		       		//console.log(data);
+//抠图与打包pdf
+
+// 上面读取资源的操作后，将图像画到canvas上
+function onImageLoad(i) {
+	if (photos[i]===undefined) {
+		var j=10;
+		mregeBackground(j,frames.length);
+		return;
+	};
+	var image=new Image;
+	image.src=photos[i].src;
+	image.onload=function(){
+	    const width = oCanvas.width = image.naturalWidth || image.width;
+	    const height = oCanvas.height = image.naturalHeight || image.height;
+
+	    ctx.drawImage(image, 0, 0);
+
+	    // 获取画布像素信息
+	    const imageData = ctx.getImageData(0, 0, width, height);
+
+	    // 一个像素点由RGBA四个值组成，data为[R,G,B,A [,R,G,B,A[...]]]组成的一维数组
+	    // 可以通过修改该数组的数据，达到修改图片内容的目的
+	    const data = imageData.data;
+	    filter(data);// 这里对图像数据进行处理
+
+	    // 把新的内容画进画布里
+	    ctx.putImageData(imageData, 0, 0);
+	    
+	    var bg = new Image;
+	    bg.src='/static/bg.jpg';
+
+		bg.addEventListener('load', function(event) {
+			ctx.globalCompositeOperation="destination-over";
+	    	ctx.drawImage(bg, 0, 0,width,height);
+			var dataURL=oCanvas.toDataURL('image/jpeg'); //转换图片为dataURL
+
+			frames.push(dataURL);
+			//console.log(frames.length);
+			i++;
+			onImageLoad(i);
+		});
+	};
 
 
-		        },
-		        error:function(){
-		            console.log("error");
-		        }
 
-		    });
 
-		}
-		var post_data = {
-		    'frame_per_second':frame
-		};
-	    $.ajax({
-	        url:'/animation/',
-	        type:'POST',
-	        data:frame, 
-	        async:true,    //或false,是否异步
-	        dataType:'json',    //返回的数据格式：json/xml/html/script/jsonp/text
-	        success:function(data){
-	       		
-	       		window.location.href='http://127.0.0.1:8000/upload/';
-
-	        },
-	        error:function(){
-	            console.log("error");
-	        }
-
-	    });
 }
+
+//抠图算法
+function filter(data) {
+	
+    for (let i = 0; i < data.length; i += 4) {
+        let r = data[i],
+            g = data[i + 1],
+            b = data[i + 2];
+        //g通道的值与r,b通道的值各相差大于20时
+        var difference_g_r=g-r;
+        var difference_g_b=g-b;
+        if(difference_g_b>10&&difference_g_r>10){
+        	var average=(r+g+b)/3;
+        	if (g<=20) {
+        		data[i]=data[i + 1]=data[i + 2]=0;
+        		
+        		data[i + 3]=150;
+        	}
+        	else if(g<=30){
+        		data[i]=data[i + 1]=data[i + 2]=average;
+        		
+        		data[i + 3]=150;
+        	}
+        	else if(g<=60){
+        		data[i]=data[i + 1]=data[i + 2]=average;
+        		
+        		data[i + 3]=150;
+        	}else{
+        		data[i + 3] = 0;
+        	}
+        	
+        }
+
+    }
+}
+function onImageErr() {
+    oInput.classList.add('err');
+}
+
+function mregeBackground(i,len){
+
+	if(len<=10){
+		var j=0;
+		var bg=new Image;
+		bg.src='/static/background/10.jpg';
+		bg.onload=function(){
+			octx.globalCompositeOperation="source-over";
+	    	octx.drawImage(bg,0,0,2480,3508);
+
+			mergeImages(j,j+10,375,150);
+
+		};
+		return;
+	}
+	var len=len;
+	var i=i;
+	var j=i-10;
+
+	if(i>len){
+
+		return;
+	}
+	// if (len<=10) {
+	// 	console.log('ssss')
+	// 	var j=0;
+	// 	var bg=new Image;
+	// 	bg.src='/static/background/10.jpg';
+	// 	bg.onload=function(){
+	// 		octx.globalCompositeOperation="source-over";
+	//     	octx.drawImage(bg,0,0,2480,3508);
+
+	// 		mergeImages(j,j+10,375,150);
+
+	// 	};
+	// }
+	
+	var bg=new Image;
+	bg.src='/static/background/'+i+'.jpg';
+	bg.onload=function(){
+		octx.globalCompositeOperation="source-over";
+    	octx.drawImage(bg,0,0,2480,3508);
+
+		mergeImages(j,j+10,375,150);
+
+	};
+
+}
+function mergeImages(i,j,x,y){
+
+		if(frames[i]===undefined){
+			var pageData=output.toDataURL('image/jpeg'); //转换图片为dataURL
+			results.push(pageData);
+			
+			console.log('print pdf document');
+
+			//addImage后两个参数控制添加图片的尺寸，此处将页面高度按照a4纸宽高比列进行压缩
+			pdf.addImage(pageData, 'JPEG', 0, 0, 595.28, 592.28/output.width * output.height );
+			pdf.save('stone.pdf');
+			octx.clearRect(0,0,2480,3508);
+			return;
+		}
+		if(i>j){
+			i=i-1+10;
+			console.log(i);
+			var pageData=output.toDataURL('image/jpeg'); //转换图片为dataURL
+			//addImage后两个参数控制添加图片的尺寸，此处将页面高度按照a4纸宽高比列进行压缩
+			pdf.addImage(pageData, 'JPEG', 0, 0, 595.28, 592.28/output.width * output.height);
+			pdf.addPage();
+			results.push(pageData);
+			octx.clearRect(0,0,2480,3508);
+			console.log('add a page of A4 paper');
+			mregeBackground(i,frames.length);
+			return;
+		}
+
+	const width=800;
+	const height=450;
+    var bg = new Image;
+    bg.src=frames[i];
+	bg.addEventListener('load', function(event) {
+		octx.drawImage(bg,x,y,width,height);
+		// if(x!=375){
+		// 	x=375;
+		// 	y+=673;
+		// }else{
+		// 	x+=1100;
+		// }
+
+		if(y>=2842){
+			y=150;
+			x+=1100;
+		}else{
+			y+=673;
+		}
+
+		i+=1;
+
+		mergeImages(i,j,x,y);
+	});
+
+
+}
+// function upload_to_server_to_merge(){
+// 		var frame=parseInt(input_num.value);
+// 		//var updatas=[];
+// 		var frame={
+// 			'frame_per_second':frame
+// 		}
+// 		for(var i=0, len=photos.length; i<len; i++){
+// 			var tem_img=photos[i].getAttribute('src');
+// 			var post_data = {
+// 			    'image':tem_img   
+// 			};
+// 		    $.ajax({
+// 		        url:'/animation/',
+// 		        type:'POST',
+// 		        data:post_data, 
+// 		        async:true,    //或false,是否异步
+// 		        dataType:'json',    //返回的数据格式：json/xml/html/script/jsonp/text
+// 		        success:function(data){
+// 		       		//console.log(data);
+
+
+// 		        },
+// 		        error:function(){
+// 		            console.log("error");
+// 		        }
+
+// 		    });
+
+// 		}
+// 		var post_data = {
+// 		    'frame_per_second':frame
+// 		};
+// 	    $.ajax({
+// 	        url:'/animation/',
+// 	        type:'POST',
+// 	        data:frame, 
+// 	        async:true,    //或false,是否异步
+// 	        dataType:'json',    //返回的数据格式：json/xml/html/script/jsonp/text
+// 	        success:function(data){
+	       		
+// 	       		window.location.href='http://127.0.0.1:8000/upload/';
+
+// 	        },
+// 	        error:function(){
+// 	            console.log("error");
+// 	        }
+
+// 	    });
+// }
