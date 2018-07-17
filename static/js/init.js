@@ -77,6 +77,7 @@ function success(stream){
     var CompatibleURL = window.URL || window.webkitURL;
     //将视频流设置为video元素的源
 	appear_video.src = CompatibleURL.createObjectURL(stream);
+	video.src = CompatibleURL.createObjectURL(stream);
     //播放视频
     //video.play();
 }
