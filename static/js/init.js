@@ -18,18 +18,21 @@ var modal_set_frame=document.getElementById("modal_set_frame");
 var input_num=document.getElementById("input_num");
 var cancel_range_num_btn=document.getElementById("cancel_range_num_btn");
 var photo=document.getElementById("photo");
-
+var current_page=document.getElementById("current_page");
 var image_div=document.getElementById("image");
 //var now=document.getElementById("now");
 var queue=document.getElementById("queue");
 
 var photos=[];
+
 var frames=[];
 var results=[];
 
 var second=1000;
 var speed=41;//1000/24~41一秒二十四帧
 
+var set_cover=document.getElementById("set_cover");
+var cover=document.getElementById("cover");
 var translate=document.getElementById("tanslate");
 
 // 抠图与打包pdf用的canvas
@@ -45,16 +48,52 @@ var del_btn=document.getElementById('del');
 var cancel_btn=document.getElementById('cancel');
 var modal = document.getElementById('modal');
 
+var global_width=0;
+var global_height=0;
 var pdf = new jsPDF('', 'pt', 'a4');
 //连接摄像头
-if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-
-    navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
-        video.src = window.URL.createObjectURL(stream);
-        appear_video.src = window.URL.createObjectURL(stream);
-        //video.play();
-    });
+var camera_par={ video: { facingMode: { exact: "environment" } } };
+//var camera_par={ video:{ width: 640, height: 426 } };
+getUserMedia(camera_par,success,error);
+//访问用户媒体设备的兼容方法
+function getUserMedia(constrains,success,error){
+    if(navigator.mediaDevices.getUserMedia){
+        //最新标准API
+        navigator.mediaDevices.getUserMedia(constrains).then(success).catch(error);
+    } else if (navigator.webkitGetUserMedia){
+        //webkit内核浏览器
+        navigator.webkitGetUserMedia(constrains).then(success).catch(error);
+    } else if (navigator.mozGetUserMedia){
+        //Firefox浏览器
+        navagator.mozGetUserMedia(constrains).then(success).catch(error);
+    } else if (navigator.getUserMedia){
+        //旧版API
+        navigator.getUserMedia(constrains).then(success).catch(error);
+    }
 }
+//成功的回调函数
+function success(stream){
+    //兼容webkit内核浏览器
+    var CompatibleURL = window.URL || window.webkitURL;
+    //将视频流设置为video元素的源
+	appear_video.src = CompatibleURL.createObjectURL(stream);
+    //播放视频
+    //video.play();
+}
+
+//异常的回调函数
+function error(error){
+    console.log("访问用户媒体设备失败：",error.name,error.message);
+}
+if (navigator.mediaDevices.getUserMedia || navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia){
+    //调用用户媒体设备，访问摄像头
+    getUserMedia({
+        video:{width:480,height:320}
+    },success,error);
+} else {
+    alert("你的浏览器不支持访问用户媒体设备");
+}
+
 document.onkeyup = function (e) {//按键信息对象以函数参数的形式传递进来了，就是那个e
     var code = e.charCode || e.keyCode;  //取出按键信息中的按键代码(大部分浏览器通过keyCode属性获取按键代码，但少部分浏览器使用的却是charCode)
     if (code == 13) {
@@ -87,6 +126,7 @@ del_btn.onclick=function(){
 	queue.removeChild(del_frame);
 	var str=del_frame;
 	photos=del_ele_in_array(photos,str);
+	current_page.innerHTML=photos.length;
 	modal.style.display='none';
 };
 
@@ -122,11 +162,20 @@ continue_btn.onclick=function(){
 	photo.style.display='block';
 	continue_btn.style.display='none';
 };
-
+set_cover.onclick=function(){
+	// if (photos.length<70) {
+	// 	alert('请排满70张再合成！！当前张数为：'+photos.length);
+	// }else{
+	// 	cover.style.display='block';
+	// }
+	cover.style.display='block';
+	
+};
 translate.onclick=function(){
+
 	var i=0;
 	onImageLoad(i);
-
+	cover.style.display='none';
 
 };
 // $(document).ready(function(){
@@ -157,6 +206,7 @@ function catch_image(){
 
 	queue.appendChild(img);
 	photos.push(img);
+	current_page.innerHTML=photos.length;
 }
 //预览播放
 function play(speed){
@@ -223,7 +273,8 @@ function onImageLoad(i) {
 	image.onload=function(){
 	    const width = oCanvas.width = image.naturalWidth || image.width;
 	    const height = oCanvas.height = image.naturalHeight || image.height;
-
+	    global_width=width;
+	    global_height=height;
 	    ctx.drawImage(image, 0, 0);
 
 	    // 获取画布像素信息
@@ -318,19 +369,7 @@ function mregeBackground(i,len){
 
 		return;
 	}
-	// if (len<=10) {
-	// 	console.log('ssss')
-	// 	var j=0;
-	// 	var bg=new Image;
-	// 	bg.src='/static/background/10.jpg';
-	// 	bg.onload=function(){
-	// 		octx.globalCompositeOperation="source-over";
-	//     	octx.drawImage(bg,0,0,2480,3508);
 
-	// 		mergeImages(j,j+10,375,150);
-
-	// 	};
-	// }
 	
 	var bg=new Image;
 	bg.src='/static/background/'+i+'.jpg';
@@ -353,8 +392,9 @@ function mergeImages(i,j,x,y){
 
 			//addImage后两个参数控制添加图片的尺寸，此处将页面高度按照a4纸宽高比列进行压缩
 			pdf.addImage(pageData, 'JPEG', 0, 0, 595.28, 592.28/output.width * output.height );
-			pdf.save('stone.pdf');
+			//pdf.save('stone.pdf');
 			octx.clearRect(0,0,2480,3508);
+			setCover();
 			return;
 		}
 		if(i>j){
@@ -397,6 +437,139 @@ function mergeImages(i,j,x,y){
 	});
 
 
+}
+// function setCover(){
+// 	var title=document.getElementById('title').value;
+// 	var editor=document.getElementById('editor').value;
+// 	var time=getNowDate();
+// 	ctx.globalCompositeOperation="source-over";
+// 	ctx.clearRect(0,0,global_width,global_height);
+// 	ctx.fillStyle='#00f';
+// 	ctx.fillRect(0,0,global_width,global_height);
+
+// 	var back_cover=oCanvas.toDataURL('image/jpeg');
+// 	ctx.fillStyle='#00f';
+// 	ctx.fillRect(0,0,global_width,global_height);
+// 	ctx.font = "italic 60px 黑体";
+// 	ctx.fillStyle = "Red";
+// 	ctx.fillText(title,330,160);
+// 	ctx.fillText(editor,330,400);
+// 	ctx.fillText(time,230,640);
+
+// 	var cover=oCanvas.toDataURL('image/jpeg');
+// 	ctx.clearRect(0,0,global_width,global_height);
+
+	
+// 	const width=800;
+// 	const height=450;
+
+// 	octx.clearRect(0,0,2480,3508);
+// 	octx.fillStyle='#fff';
+// 	octx.fillRect(0,0,2480,3508);
+//     var first = new Image;
+//     first.src=cover;
+// 	first.addEventListener('load', function(event) {
+// 		octx.drawImage(first,375,150,width,height);
+// 		var last= new Image;
+// 		last.src=back_cover;
+// 		last.addEventListener('load', function(event) {
+// 			octx.drawImage(last,1100,150,width,height);
+// 			pdf.addPage();
+// 			var pageData=output.toDataURL('image/jpeg');
+// 			pdf.addImage(pageData, 'JPEG', 0, 0, 595.28, 592.28/output.width * output.height);
+// 			pdf.save('test.pdf');
+// 		});
+// 	});	
+// }
+function setCover(){
+	var title=document.getElementById('title').value;
+	var editor=document.getElementById('editor').value;
+	var time=getNowDate();
+	// ctx.globalCompositeOperation="source-over";
+	// ctx.clearRect(0,0,global_width,global_height);
+	// ctx.fillStyle='#00f';
+	// ctx.fillRect(0,0,global_width,global_height);
+
+	// var back_cover=oCanvas.toDataURL('image/jpeg');
+	// ctx.fillStyle='#00f';
+	// ctx.fillRect(0,0,global_width,global_height);
+	// ctx.font = "italic 60px 黑体";
+	// ctx.fillStyle = "Red";
+	// ctx.fillText(title,330,160);
+	// ctx.fillText(editor,330,400);
+	// ctx.fillText(time,230,640);
+
+	// var cover=oCanvas.toDataURL('image/jpeg');
+	// ctx.clearRect(0,0,global_width,global_height);
+
+	
+	const width=2480;
+	const height=678;
+
+	octx.clearRect(0,0,2480,3508);
+	octx.fillStyle='#fff';
+	octx.fillRect(0,0,2480,3508);
+	octx.globalCompositeOperation="source-over";
+	var cover=new Image;
+	cover.src='/static/cover.jpg';
+	cover.addEventListener('load', function(event) {
+		octx.drawImage(cover,0,150,width,height);
+		octx.font = "italic 60px 黑体";
+		octx.fillStyle = "#000";
+		octx.fillText(title,330,320);
+		octx.fillText(editor,330,500);
+		octx.fillText(time,230,740);
+		pdf.addPage();
+		var pageData=output.toDataURL('image/jpeg');
+		pdf.addImage(pageData, 'JPEG', 0, 0, 595.28, 592.28/output.width * output.height);
+		pdf.save('test.pdf');
+
+	});
+ //    var first = new Image;
+ //    first.src=cover;
+	// first.addEventListener('load', function(event) {
+	// 	octx.drawImage(first,375,150,width,height);
+	// 	var last= new Image;
+	// 	last.src=back_cover;
+	// 	last.addEventListener('load', function(event) {
+	// 		octx.drawImage(last,1100,150,width,height);
+	// 		pdf.addPage();
+	// 		var pageData=output.toDataURL('image/jpeg');
+	// 		pdf.addImage(pageData, 'JPEG', 0, 0, 595.28, 592.28/output.width * output.height);
+	// 		pdf.save('test.pdf');
+	// 	});
+	// });	
+}
+function getNowDate() {
+	 var date = new Date();
+	 var sign1 = "-";
+	 var sign2 = ":";
+	 var year = date.getFullYear() // 年
+	 var month = date.getMonth() + 1; // 月
+	 var day  = date.getDate(); // 日
+	 var hour = date.getHours(); // 时
+	 var minutes = date.getMinutes(); // 分
+	 var seconds = date.getSeconds() //秒
+	 var weekArr = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期天'];
+	 var week = weekArr[date.getDay()];
+	 // 给一位数数据前面加 “0”
+	 if (month >= 1 && month <= 9) {
+	  month = "0" + month;
+	 }
+	 if (day >= 0 && day <= 9) {
+	  day = "0" + day;
+	 }
+	 if (hour >= 0 && hour <= 9) {
+	  hour = "0" + hour;
+	 }
+	 if (minutes >= 0 && minutes <= 9) {
+	  minutes = "0" + minutes;
+	 }
+	 if (seconds >= 0 && seconds <= 9) {
+	  seconds = "0" + seconds;
+	 }
+	 var currentdate = year + sign1 + month + sign1 + day + " " + hour + sign2 + minutes + sign2 + seconds + " " + week;
+	 return currentdate;
 }
 // function upload_to_server_to_merge(){
 // 		var frame=parseInt(input_num.value);
